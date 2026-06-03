@@ -2,48 +2,39 @@
 
 describe(`Function 'isPasswordActual':`, () => {
   const isPasswordActual = require('./isPasswordActual');
-  const date = new Date(Date.now());
-  const today = {
-    year: date.getUTCFullYear(),
-    month: date.getMonth() + 1,
-    date: date.getDate(),
-  };
+  let dateSpy;
+
+  beforeEach(() => {
+    const mockDateMs = new Date(2021, 5, 10).getTime();
+
+    dateSpy = jest.spyOn(Date, 'now').mockImplementation(() => mockDateMs);
+  });
+
+  afterEach(() => {
+    dateSpy.mockRestore();
+  });
 
   it(`should be declared`, () => {
     expect(isPasswordActual).toBeInstanceOf(Function);
   });
 
   it(`should return a string`, () => {
-    expect(typeof isPasswordActual(today.year, today.month, today.date)).toBe(
-      'string',
-    );
+    expect(typeof isPasswordActual(2021, 6, 1)).toBe('string');
   });
 
   it(`should return immediate change status if changed more than 60 days ago`, () => {
-    const lastYear = isPasswordActual(today.year, today.month, today.date - 61);
-
-    expect(lastYear).toBe('Immediately change the password!');
+    expect(isPasswordActual(2020, 6, 9)).toBe(
+      'Immediately change the password!',
+    );
   });
 
   it(`should return warning status if changed between 31 and 60 days ago`, () => {
-    const lowerBoundaryCase = isPasswordActual(
-      today.year,
-      today.month,
-      today.date - 60,
+    expect(isPasswordActual(2021, 5, 1)).toBe(
+      'You should change your password.',
     );
-    const upperBoundaryCase = isPasswordActual(
-      today.year,
-      today.month,
-      today.date - 31,
-    );
-
-    expect(lowerBoundaryCase).toBe('You should change your password.');
-    expect(upperBoundaryCase).toBe('You should change your password.');
   });
 
   it(`should return actual status if changed 30 days ago or less`, () => {
-    const lastDay = isPasswordActual(today.year, today.month, today.date - 30);
-
-    expect(lastDay).toBe('Password is actual.');
+    expect(isPasswordActual(2021, 6, 1)).toBe('Password is actual.');
   });
 });
